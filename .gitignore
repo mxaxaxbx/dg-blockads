@@ -1,0 +1,90 @@
+# Operating System Files
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Editor and IDE Files
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# Distribution/Packaged Extensions
+*.zip
+*.crx
+*.xpi
+*.pem
+dist/
+build/
+package/
+
+# Node.js (if you add npm/node dependencies later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Extension-specific
+# Chrome extension keys and certificates
+*.pem
+
+# Firefox extension
+web-ext-artifacts/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.orig
+
