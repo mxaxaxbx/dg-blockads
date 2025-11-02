@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "digi ads block",
+  "version": "1.0",
+  "description": "Automatically removes all DOM elements with IDs like google_ads_XXXX, even when dynamically added.",
+  "permissions": ["scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "digi ads block"
+  }
+}
