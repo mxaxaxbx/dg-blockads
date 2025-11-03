@@ -1,6 +1,12 @@
 (() => {
+  // Deactivate on Google services to avoid breaking functionality
+  if (window.location.hostname.endsWith('.google.com') || window.location.hostname === 'google.com') {
+    console.log('🚫 Extension deactivated on Google services');
+    return;
+  }
+
   const adIdPattern = /^google_ads_/i;
-  const adScriptPattern = /(google|doubleclick|googlesyndication|advertisement|advertising|ads)/i;
+  const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising)/i;
 
   function isAdScript(script) {
     // Check script src
@@ -19,7 +25,6 @@
   }
 
   function removeAdScripts() {
-    console.log('🚫 Removing ad scripts');
     document.querySelectorAll('script').forEach(script => {
       if (isAdScript(script)) {
         script.remove();
@@ -29,7 +34,6 @@
   }
 
   function removeAds() {
-    console.log('🚫 Removing ads');
     document.querySelectorAll('[id]').forEach(el => {
       if (adIdPattern.test(el.id)) {
         el.remove();
@@ -37,17 +41,19 @@
       }
     });
 
+    // More specific pattern to avoid removing legitimate popups and UI elements
     document.querySelectorAll('[class]').forEach(el => {
-      if (/GoogleActiveViewInnerContainer/i.test(el.className)) {
-        el.remove();
-        console.log('🧹 Removed:', el.className);
-      }
-    });
-
-    document.querySelectorAll('[class]').forEach(el => {
-      if (/ads/i.test(el.className)) {
-        el.remove();
-        console.log('🧹 Removed:', el.className);
+      const className = el.className;
+      // Only remove if it's clearly an ad container, not just any element with "ads" in class
+      if (/(^|\s)(ads|advertisement|advertising|ad-container|ad-wrapper|ad-banner|google-ads)(\s|$)/i.test(className) ||
+          /GoogleActiveViewInnerContainer/i.test(className)) {
+        // Additional check: don't remove if it looks like a popup/modal (common popup indicators)
+        const isPopup = /(popup|modal|dialog|overlay|lightbox)/i.test(className) && 
+                       !/(ad|ads)/i.test(className);
+        if (!isPopup) {
+          el.remove();
+          console.log('🧹 Removed:', el.className);
+        }
       }
     });
   }
@@ -76,11 +82,25 @@
               }
             });
             
-            // Check nested ad elements
+            // Check nested ad elements by ID
             node.querySelectorAll?.('[id]').forEach(el => {
               if (adIdPattern.test(el.id)) {
                 el.remove();
                 console.log('🧹 Removed nested ad:', el.id);
+              }
+            });
+            
+            // Check nested ad elements by class (with popup protection)
+            node.querySelectorAll?.('[class]').forEach(el => {
+              const className = el.className;
+              if (/(^|\s)(ads|advertisement|advertising|ad-container|ad-wrapper|ad-banner|google-ads)(\s|$)/i.test(className) ||
+                  /GoogleActiveViewInnerContainer/i.test(className)) {
+                const isPopup = /(popup|modal|dialog|overlay|lightbox)/i.test(className) && 
+                               !/(ad|ads)/i.test(className);
+                if (!isPopup) {
+                  el.remove();
+                  console.log('🧹 Removed nested ad by class:', className);
+                }
               }
             });
           }
@@ -101,6 +121,4 @@
     observer.observe(document.body, { childList: true, subtree: true });
     removeAds();
   }
-  
-  console.log('🚫 Google Ads auto-removal active');
 })();
