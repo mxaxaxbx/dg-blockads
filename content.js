@@ -1,12 +1,11 @@
 (() => {
   // Deactivate on Google services to avoid breaking functionality
   if (window.location.hostname.endsWith('.google.com') || window.location.hostname === 'google.com') {
-    console.log('🚫 Extension deactivated on Google services');
     return;
   }
 
-  const adIdPattern = /^google_ads_/i;
-  const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising)/i;
+  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-)/i;
+  const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising|tl-iframe)/i;
 
   function isAdScript(script) {
     // Check script src
@@ -28,7 +27,6 @@
     document.querySelectorAll('script').forEach(script => {
       if (isAdScript(script)) {
         script.remove();
-        console.log('🚫 Removed ad script:', script.src || 'inline script');
       }
     });
   }
@@ -37,7 +35,6 @@
     document.querySelectorAll('[id]').forEach(el => {
       if (adIdPattern.test(el.id)) {
         el.remove();
-        console.log('🧹 Removed:', el.id);
       }
     });
 
@@ -52,7 +49,6 @@
                        !/(ad|ads)/i.test(className);
         if (!isPopup) {
           el.remove();
-          console.log('🧹 Removed:', el.className);
         }
       }
     });
@@ -65,20 +61,17 @@
           // Check if it's a script tag
           if (node.tagName === 'SCRIPT' && isAdScript(node)) {
             node.remove();
-            console.log('🚫 Removed dynamic ad script:', node.src || 'inline script');
             continue;
           }
           
           // Check for ad elements
           if (node.id && adIdPattern.test(node.id)) {
             node.remove();
-            console.log('🧹 Removed dynamic ad:', node.id);
           } else {
             // Check nested scripts
             node.querySelectorAll?.('script').forEach(script => {
               if (isAdScript(script)) {
                 script.remove();
-                console.log('🚫 Removed nested ad script:', script.src || 'inline script');
               }
             });
             
@@ -86,7 +79,6 @@
             node.querySelectorAll?.('[id]').forEach(el => {
               if (adIdPattern.test(el.id)) {
                 el.remove();
-                console.log('🧹 Removed nested ad:', el.id);
               }
             });
             
@@ -99,7 +91,6 @@
                                !/(ad|ads)/i.test(className);
                 if (!isPopup) {
                   el.remove();
-                  console.log('🧹 Removed nested ad by class:', className);
                 }
               }
             });
