@@ -4,7 +4,7 @@
     return;
   }
 
-  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-)/i;
+  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-1|ad_)/i;
   const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising|tl-iframe)/i;
 
   function isAdScript(script) {
