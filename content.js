@@ -16,7 +16,8 @@
       [id^="utif_"],
       [id^="adnxs-1"],
       [id^="ad_"],
-      [class~="adsbygoogle"] {
+      [class~="adsbygoogle"],
+      [class~="ad-content"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -46,7 +47,7 @@
   function isAdElement(el) {
     if (el.id && adIdPattern.test(el.id)) return true;
     const className = typeof el.className === 'string' ? el.className : '';
-    if (/(^|\s)(adsbygoogle|ads|advertisement|advertising|ad-container|ad-wrapper|ad-banner|google-ads)(\s|$)/i.test(className) ||
+    if (/(^|\s)(adsbygoogle|ads|advertisement|advertising|ad-container|ad-wrapper|ad-banner|ad-content|google-ads)(\s|$)/i.test(className) ||
         /GoogleActiveViewInnerContainer/i.test(className)) {
       const isPopup = /(popup|modal|dialog|overlay|lightbox)/i.test(className) && !/(ad|ads)/i.test(className);
       return !isPopup;
