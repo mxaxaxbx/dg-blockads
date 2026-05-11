@@ -3,7 +3,7 @@
   "name": "digi ads block",
   "version": "1.0",
   "description": "Automatically removes all DOM elements with IDs like google_ads_XXXX, even when dynamically added.",
-  "permissions": ["scripting", "activeTab"],
+  "permissions": ["scripting", "activeTab", "declarativeNetRequest"],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {

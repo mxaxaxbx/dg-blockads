@@ -1,10 +1,77 @@
 (() => {
+  if (window.__dgBlockadsInitialized) return;
+  window.__dgBlockadsInitialized = true;
+
   if (window.location.hostname.endsWith('.google.com') || window.location.hostname === 'google.com') {
     return;
   }
 
   const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-1|ad_)/i;
   const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising|tl-iframe)/i;
+  const blockedNetworkHosts = [
+    'doubleclick.net',
+    'googlesyndication.com',
+    'googleadservices.com',
+    'googletagmanager.com',
+    'google-analytics.com',
+    'analytics.google.com',
+    'adservice.google.com',
+    'adnxs.com',
+    'criteo.com',
+    'pubmatic.com',
+    'rubiconproject.com',
+    'taboola.com',
+    'outbrain.com',
+    'scorecardresearch.com',
+    'quantserve.com',
+    'fullstory.com',
+    'hotjar.com',
+    'mixpanel.com',
+    'segment.io',
+    'connect.facebook.net',
+    'analytics.tiktok.com'
+  ];
+  const blockedResourceTags = new Set([
+    'SCRIPT',
+    'IFRAME',
+    'IMG',
+    'LINK',
+    'SOURCE',
+    'AUDIO',
+    'VIDEO',
+    'TRACK',
+    'EMBED',
+    'OBJECT',
+    'FORM'
+  ]);
+  const blockedResourceAttributes = ['src', 'href', 'data', 'action', 'poster', 'srcset'];
+
+  function isBlockedNetworkUrl(value) {
+    if (!value || typeof value !== 'string') return false;
+    try {
+      const url = new URL(value, document.baseURI);
+      const hostname = url.hostname.toLowerCase();
+      return blockedNetworkHosts.some(host => hostname === host || hostname.endsWith(`.${host}`));
+    } catch {
+      return false;
+    }
+  }
+
+  function isBlockedSrcset(value) {
+    if (!value || typeof value !== 'string') return false;
+    return value.split(',').some(part => {
+      const candidate = part.trim().split(/\s+/)[0];
+      return isBlockedNetworkUrl(candidate);
+    });
+  }
+
+  function isBlockedResourceElement(el) {
+    if (!el || el.nodeType !== 1 || !blockedResourceTags.has(el.tagName)) return false;
+    return blockedResourceAttributes.some(attr => {
+      if (attr === 'srcset') return isBlockedSrcset(el.getAttribute(attr));
+      return isBlockedNetworkUrl(el.getAttribute(attr) || el[attr]);
+    });
+  }
 
   function injectAdStyles() {
     if (document.getElementById('dg-blockads-style')) return;
@@ -44,6 +111,13 @@
     });
   }
 
+  function removeBlockedNetworkResources(root = document) {
+    const selector = Array.from(blockedResourceTags).map(tag => tag.toLowerCase()).join(',');
+    root.querySelectorAll?.(selector).forEach(el => {
+      if (isBlockedResourceElement(el)) el.remove();
+    });
+  }
+
   function isAdElement(el) {
     if (el.id && adIdPattern.test(el.id)) return true;
     const className = typeof el.className === 'string' ? el.className : '';
@@ -70,11 +144,16 @@
       node.remove();
       return;
     }
+    if (isBlockedResourceElement(node)) {
+      node.remove();
+      return;
+    }
     if (isAdElement(node)) {
       node.remove();
       return;
     }
     node.querySelectorAll?.('script').forEach(s => { if (isAdScript(s)) s.remove(); });
+    removeBlockedNetworkResources(node);
     node.querySelectorAll?.('[id]').forEach(el => { if (adIdPattern.test(el.id)) el.remove(); });
     node.querySelectorAll?.('[class]').forEach(el => { if (isAdElement(el)) el.remove(); });
   }
@@ -89,6 +168,7 @@
         if (mutation.attributeName === 'id' && isAdElement(node)) node.remove();
         else if (mutation.attributeName === 'class' && isAdElement(node)) node.remove();
         else if (mutation.attributeName === 'src' && node.tagName === 'SCRIPT' && isAdScript(node)) node.remove();
+        else if (blockedResourceAttributes.includes(mutation.attributeName) && isBlockedResourceElement(node)) node.remove();
       }
     }
   });
@@ -98,18 +178,21 @@
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['id', 'class', 'src']
+    attributeFilter: ['id', 'class', 'src', 'href', 'data', 'action', 'poster', 'srcset']
   });
 
   injectAdStyles();
+  removeBlockedNetworkResources();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       removeAdScripts();
       removeAds();
+      removeBlockedNetworkResources();
     });
   } else {
     removeAdScripts();
     removeAds();
+    removeBlockedNetworkResources();
   }
 })();
