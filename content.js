@@ -79,10 +79,13 @@
     style.id = 'dg-blockads-style';
     style.textContent = `
       [id^="google_ads_"],
+      [id*="google_ads_iframe_"],
+      [id*="__container__"],
       [id^="trc_wrapper"],
       [id^="utif_"],
       [id^="adnxs-1"],
       [id^="ad_"],
+      iframe[id*="google_ads_iframe_"],
       [class~="adsbygoogle"],
       [class~="ad-content"] {
         display: none !important;
@@ -120,6 +123,8 @@
 
   function isAdElement(el) {
     if (el.id && adIdPattern.test(el.id)) return true;
+    if (el.id && /google_ads_iframe_/i.test(el.id)) return true;
+    if (el.id && /__container__$/i.test(el.id) && /google_ads_iframe_/i.test(el.id)) return true;
     const className = typeof el.className === 'string' ? el.className : '';
     if (/(^|\s)(adsbygoogle|ads|advertisement|advertising|ad-container|ad-wrapper|ad-banner|ad-content|google-ads)(\s|$)/i.test(className) ||
         /GoogleActiveViewInnerContainer/i.test(className)) {
