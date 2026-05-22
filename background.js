@@ -22,6 +22,12 @@ const BLOCKED_NETWORK_HOSTS = [
   'analytics.tiktok.com'
 ];
 
+const BLOCKED_URL_FILTERS = [
+  '||youtube.com/pagead/',
+  '||youtube.com/api/stats/ads',
+  '||youtube.com/api/stats/atr'
+];
+
 const BLOCKED_RESOURCE_TYPES = [
   'main_frame',
   'sub_frame',
@@ -36,7 +42,7 @@ const BLOCKED_RESOURCE_TYPES = [
 ];
 
 function buildNetworkBlockRules() {
-  return BLOCKED_NETWORK_HOSTS.map((host, index) => ({
+  const hostRules = BLOCKED_NETWORK_HOSTS.map((host, index) => ({
     id: index + 1,
     priority: 1,
     action: { type: 'block' },
@@ -45,12 +51,27 @@ function buildNetworkBlockRules() {
       resourceTypes: BLOCKED_RESOURCE_TYPES
     }
   }));
+
+  const urlRules = BLOCKED_URL_FILTERS.map((urlFilter, index) => ({
+    id: BLOCKED_NETWORK_HOSTS.length + index + 1,
+    priority: 1,
+    action: { type: 'block' },
+    condition: {
+      urlFilter,
+      resourceTypes: BLOCKED_RESOURCE_TYPES
+    }
+  }));
+
+  return [...hostRules, ...urlRules];
 }
 
 async function syncNetworkBlockRules() {
   try {
     await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: BLOCKED_NETWORK_HOSTS.map((_, index) => index + 1),
+      removeRuleIds: [
+        ...BLOCKED_NETWORK_HOSTS.map((_, index) => index + 1),
+        ...BLOCKED_URL_FILTERS.map((_, index) => BLOCKED_NETWORK_HOSTS.length + index + 1)
+      ],
       addRules: buildNetworkBlockRules()
     });
   } catch (error) {

@@ -2,7 +2,11 @@
   if (window.__dgBlockadsInitialized) return;
   window.__dgBlockadsInitialized = true;
 
-  if (window.location.hostname.endsWith('.google.com') || window.location.hostname === 'google.com') {
+  const hostname = window.location.hostname.toLowerCase();
+  const isGoogleProperty = hostname.endsWith('.google.com') || hostname === 'google.com';
+  const isYouTubeProperty = hostname === 'youtube.com' || hostname.endsWith('.youtube.com') || hostname === 'youtu.be';
+
+  if (isGoogleProperty) {
     return;
   }
 
@@ -45,6 +49,32 @@
     'FORM'
   ]);
   const blockedResourceAttributes = ['src', 'href', 'data', 'action', 'poster', 'srcset'];
+  const youtubeAdSelectors = [
+    'ytd-ad-slot-renderer',
+    'ytd-display-ad-renderer',
+    'ytd-promoted-sparkles-web-renderer',
+    'ytd-promoted-video-renderer',
+    'ytd-promoted-sparkles-text-search-renderer',
+    'ytd-in-feed-ad-layout-renderer',
+    'ytd-action-companion-ad-renderer',
+    'ytd-companion-slot-renderer',
+    'ytd-video-masthead-ad-v3-renderer',
+    'ytd-player-legacy-desktop-watch-ads-renderer',
+    'yt-mealbar-promo-renderer',
+    'tp-yt-paper-dialog yt-mealbar-promo-renderer',
+    '#player-ads',
+    '#masthead-ad',
+    '.ytp-ad-module',
+    '.ytp-ad-image-overlay',
+    '.ytp-ad-overlay-container',
+    '.ytp-ad-player-overlay',
+    '.ytp-ad-text-overlay',
+    '.ytp-ad-skip-button-container',
+    '.ytp-ad-preview-container',
+    '.ytp-ad-progress-list',
+    '.ytp-ad-survey',
+    '.ytp-ad-overlay-close-button'
+  ];
 
   function isBlockedNetworkUrl(value) {
     if (!value || typeof value !== 'string') return false;
@@ -97,8 +127,72 @@
         position: absolute !important;
         z-index: -9999 !important;
       }
+
+      ${isYouTubeProperty ? `
+      ytd-ad-slot-renderer,
+      ytd-display-ad-renderer,
+      ytd-promoted-sparkles-web-renderer,
+      ytd-promoted-video-renderer,
+      ytd-promoted-sparkles-text-search-renderer,
+      ytd-in-feed-ad-layout-renderer,
+      ytd-action-companion-ad-renderer,
+      ytd-companion-slot-renderer,
+      ytd-video-masthead-ad-v3-renderer,
+      ytd-player-legacy-desktop-watch-ads-renderer,
+      yt-mealbar-promo-renderer,
+      tp-yt-paper-dialog yt-mealbar-promo-renderer,
+      #player-ads,
+      #masthead-ad,
+      .ytp-ad-module,
+      .ytp-ad-image-overlay,
+      .ytp-ad-overlay-container,
+      .ytp-ad-player-overlay,
+      .ytp-ad-text-overlay,
+      .ytp-ad-skip-button-container,
+      .ytp-ad-preview-container,
+      .ytp-ad-progress-list,
+      .ytp-ad-survey,
+      .ytp-ad-overlay-close-button {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      ` : ''}
     `;
     (document.head || document.documentElement).appendChild(style);
+  }
+
+  function isYouTubeAdElement(el) {
+    if (!isYouTubeProperty || !el || el.nodeType !== 1) return false;
+    if (el.id === 'player-ads' || el.id === 'masthead-ad') return true;
+    if (youtubeAdSelectors.includes(el.tagName.toLowerCase())) return true;
+    const className = typeof el.className === 'string' ? el.className : '';
+    return /(^|\s)(ytp-ad-|ytp-paid-content|ytd-display-ad-renderer|ytd-promoted-|ytd-ad-slot-renderer|yt-mealbar-promo-renderer)(\s|$)/i.test(className);
+  }
+
+  function removeYouTubeAds(root = document) {
+    if (!isYouTubeProperty) return;
+
+    root.querySelectorAll?.(youtubeAdSelectors.join(',')).forEach(el => el.remove());
+
+    root.querySelectorAll?.('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-reel-item-renderer').forEach(el => {
+      if (el.querySelector?.('ytd-ad-slot-renderer, ytd-display-ad-renderer, ytd-promoted-sparkles-web-renderer, ytd-in-feed-ad-layout-renderer, ytd-promoted-video-renderer, ytd-video-masthead-ad-v3-renderer, ytd-player-legacy-desktop-watch-ads-renderer, yt-mealbar-promo-renderer')) {
+        el.remove();
+      }
+    });
+
+    root.querySelectorAll?.('[aria-label*="Sponsored" i], [title*="Sponsored" i]').forEach(el => {
+      const card = el.closest?.('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-reel-item-renderer');
+      (card || el).remove();
+    });
+  }
+
+  function clickYouTubeSkipButtons(root = document) {
+    if (!isYouTubeProperty) return;
+    root.querySelectorAll?.('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button-container button, button[aria-label*="Skip" i], button[title*="Skip" i]').forEach(button => {
+      if (typeof button.click === 'function') button.click();
+    });
   }
 
   function isAdScript(script) {
@@ -141,6 +235,9 @@
     document.querySelectorAll('[class]').forEach(el => {
       if (isAdElement(el)) el.remove();
     });
+
+    removeYouTubeAds();
+    clickYouTubeSkipButtons();
   }
 
   function processNode(node) {
@@ -153,6 +250,10 @@
       node.remove();
       return;
     }
+    if (isYouTubeAdElement(node)) {
+      node.remove();
+      return;
+    }
     if (isAdElement(node)) {
       node.remove();
       return;
@@ -161,6 +262,8 @@
     removeBlockedNetworkResources(node);
     node.querySelectorAll?.('[id]').forEach(el => { if (adIdPattern.test(el.id)) el.remove(); });
     node.querySelectorAll?.('[class]').forEach(el => { if (isAdElement(el)) el.remove(); });
+    removeYouTubeAds(node);
+    clickYouTubeSkipButtons(node);
   }
 
   const observer = new MutationObserver(mutations => {
@@ -172,6 +275,7 @@
         if (node.nodeType !== 1) continue;
         if (mutation.attributeName === 'id' && isAdElement(node)) node.remove();
         else if (mutation.attributeName === 'class' && isAdElement(node)) node.remove();
+        else if ((mutation.attributeName === 'id' || mutation.attributeName === 'class') && isYouTubeAdElement(node)) node.remove();
         else if (mutation.attributeName === 'src' && node.tagName === 'SCRIPT' && isAdScript(node)) node.remove();
         else if (blockedResourceAttributes.includes(mutation.attributeName) && isBlockedResourceElement(node)) node.remove();
       }
@@ -188,16 +292,22 @@
 
   injectAdStyles();
   removeBlockedNetworkResources();
+  removeYouTubeAds();
+  clickYouTubeSkipButtons();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       removeAdScripts();
       removeAds();
       removeBlockedNetworkResources();
+      removeYouTubeAds();
+      clickYouTubeSkipButtons();
     });
   } else {
     removeAdScripts();
     removeAds();
     removeBlockedNetworkResources();
+    removeYouTubeAds();
+    clickYouTubeSkipButtons();
   }
 })();
