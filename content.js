@@ -195,6 +195,63 @@
     });
   }
 
+  function isYouTubeAdPlayback() {
+    if (!isYouTubeProperty) return false;
+
+    const player = document.querySelector('#movie_player, .html5-video-player');
+    if (player && (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting'))) {
+      return true;
+    }
+
+    return Boolean(
+      document.querySelector('ytd-watch-flexy.ad-showing') ||
+      document.querySelector('#movie_player .ytp-ad-player-overlay') ||
+      document.querySelector('#movie_player .ytp-ad-module') ||
+      document.querySelector('#movie_player .ytp-ad-text-overlay')
+    );
+  }
+
+  function bypassYouTubeVideoAds() {
+    if (!isYouTubeProperty || !isYouTubeAdPlayback()) return;
+
+    const video = document.querySelector('video');
+    if (video) {
+      try {
+        video.muted = true;
+      } catch {}
+
+      const duration = Number(video.duration);
+      const currentTime = Number(video.currentTime);
+      if (Number.isFinite(duration) && duration > 0 && Number.isFinite(currentTime)) {
+        const targetTime = Math.max(0, duration - 0.1);
+        if (targetTime > currentTime + 0.25) {
+          try {
+            video.currentTime = targetTime;
+          } catch {}
+        }
+      }
+    }
+
+    clickYouTubeSkipButtons();
+  }
+
+  function startYouTubeAdBypassLoop() {
+    if (!isYouTubeProperty) return;
+
+    const run = () => {
+      clickYouTubeSkipButtons();
+      bypassYouTubeVideoAds();
+    };
+
+    run();
+    window.addEventListener('yt-navigate-finish', run, true);
+    window.addEventListener('yt-page-data-updated', run, true);
+    document.addEventListener('play', run, true);
+    document.addEventListener('timeupdate', run, true);
+    document.addEventListener('visibilitychange', run, true);
+    setInterval(run, 500);
+  }
+
   function isAdScript(script) {
     if (script.src && adScriptPattern.test(script.src)) return true;
     if (script.textContent && adScriptPattern.test(script.textContent)) return true;
@@ -294,6 +351,7 @@
   removeBlockedNetworkResources();
   removeYouTubeAds();
   clickYouTubeSkipButtons();
+  startYouTubeAdBypassLoop();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -302,6 +360,7 @@
       removeBlockedNetworkResources();
       removeYouTubeAds();
       clickYouTubeSkipButtons();
+      bypassYouTubeVideoAds();
     });
   } else {
     removeAdScripts();
@@ -309,5 +368,6 @@
     removeBlockedNetworkResources();
     removeYouTubeAds();
     clickYouTubeSkipButtons();
+    bypassYouTubeVideoAds();
   }
 })();
