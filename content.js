@@ -253,10 +253,14 @@
   }
 
   function isAdScript(script) {
-    if (script.src && adScriptPattern.test(script.src)) return true;
-    if (script.textContent && adScriptPattern.test(script.textContent)) return true;
-    if (script.textContent && /(googletag|adsbygoogle|__ga|gtag|dataLayer)/i.test(script.textContent)) return true;
-    return false;
+    const srcMatch =
+      script.src && adScriptPattern.test(script.src);
+
+    const contentMatch =
+      script.textContent &&
+      adScriptPattern.test(script.textContent);
+
+    return srcMatch || contentMatch;
   }
 
   function removeAdScripts() {
