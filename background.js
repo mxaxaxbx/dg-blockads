@@ -29,16 +29,16 @@ const BLOCKED_URL_FILTERS = [
 ];
 
 const BLOCKED_RESOURCE_TYPES = [
-  'main_frame',
-  'sub_frame',
-  'script',
-  'image',
-  'stylesheet',
-  'font',
-  'xmlhttprequest',
-  'media',
-  'websocket',
-  'other'
+  // 'main_frame',
+  // 'sub_frame',
+  // 'script',
+  // 'image',
+  // 'stylesheet',
+  // 'font',
+  // 'xmlhttprequest',
+  // 'media',
+  // 'websocket',
+  // 'other'
 ];
 
 function buildNetworkBlockRules() {
