@@ -10,7 +10,7 @@
     return;
   }
 
-  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-1|ad_)/i;
+  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-1|ad_banner|ad_container|ad_wrapper)/i;
   const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising|tl-iframe)/i;
   const blockedNetworkHosts = [
     'doubleclick.net',
@@ -114,10 +114,12 @@
       [id^="trc_wrapper"],
       [id^="utif_"],
       [id^="adnxs-1"],
-      [id^="ad_"],
+      [id^="ad_banner"],
+      [id^="ad_container"],
       iframe[id*="google_ads_iframe_"],
       [class~="adsbygoogle"],
-      [class~="ad-content"] {
+      [class~="ad-banner"],
+      [class~="ad-container"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -281,7 +283,7 @@
     if (el.id && /google_ads_iframe_/i.test(el.id)) return true;
     if (el.id && /__container__$/i.test(el.id) && /google_ads_iframe_/i.test(el.id)) return true;
     const className = typeof el.className === 'string' ? el.className : '';
-    if (/(^|\s)(adsbygoogle|ads|advertisement|advertising|ad-container|ad-wrapper|ad-banner|ad-content|google-ads)(\s|$)/i.test(className) ||
+    if (/(^|\s)(adsbygoogle|advertisement|ad-slot|ad-container|ad-wrapper|ad-banner|google-ads)(\s|$)/i.test(className) ||
         /GoogleActiveViewInnerContainer/i.test(className)) {
       const isPopup = /(popup|modal|dialog|overlay|lightbox)/i.test(className) && !/(ad|ads)/i.test(className);
       return !isPopup;
