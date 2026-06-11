@@ -10,8 +10,8 @@
     return;
   }
 
-  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-1|ad_banner|ad_container|ad_wrapper)/i;
-  const adScriptPattern = /(doubleclick|googlesyndication|advertisement|advertising|tl-iframe)/i;
+  const adIdPattern = /^(google_ads_|trc_wrapper|utif_|adnxs-1)/i;
+  const adScriptPattern = /(doubleclick|googlesyndication|tl-iframe)/i;
   const blockedNetworkHosts = [
     'doubleclick.net',
     'googlesyndication.com',
@@ -106,12 +106,8 @@
       [id^="trc_wrapper"],
       [id^="utif_"],
       [id^="adnxs-1"],
-      [id^="ad_banner"],
-      [id^="ad_container"],
       iframe[id*="google_ads_iframe_"],
-      [class~="adsbygoogle"],
-      [class~="ad-banner"],
-      [class~="ad-container"] {
+      [class~="adsbygoogle"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -159,6 +155,7 @@
 
   function isYouTubeAdElement(el) {
     if (!isYouTubeProperty || !el || el.nodeType !== 1) return false;
+    if (el.tagName === 'BODY' || el.tagName === 'HTML' || el.tagName === 'HEAD') return false;
     if (el.id === 'player-ads' || el.id === 'masthead-ad') return true;
     if (youtubeAdSelectors.includes(el.tagName.toLowerCase())) return true;
     const className = typeof el.className === 'string' ? el.className : '';
@@ -271,10 +268,11 @@
   }
 
   function isAdElement(el) {
+    if (el.tagName === 'BODY' || el.tagName === 'HTML' || el.tagName === 'HEAD') return false;
     if (el.id && adIdPattern.test(el.id)) return true;
     if (el.id && /google_ads_iframe_/i.test(el.id)) return true;
     const className = typeof el.className === 'string' ? el.className : '';
-    if (/(^|\s)(adsbygoogle|advertisement|ad-slot|ad-container|ad-wrapper|ad-banner|google-ads)(\s|$)/i.test(className) ||
+    if (/(^|\s)(adsbygoogle|google-ads)(\s|$)/i.test(className) ||
         /GoogleActiveViewInnerContainer/i.test(className)) {
       const isPopup = /(popup|modal|dialog|overlay|lightbox)/i.test(className) && !/(ad|ads)/i.test(className);
       return !isPopup;
