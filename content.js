@@ -39,16 +39,9 @@
     'SCRIPT',
     'IFRAME',
     'IMG',
-    'LINK',
-    'SOURCE',
-    'AUDIO',
-    'VIDEO',
-    'TRACK',
-    'EMBED',
-    'OBJECT',
-    'FORM'
+    'SOURCE'
   ]);
-  const blockedResourceAttributes = ['src', 'href', 'data', 'action', 'poster', 'srcset'];
+  const blockedResourceAttributes = ['src', 'href', 'data', 'srcset'];
   const youtubeAdSelectors = [
     'ytd-ad-slot-renderer',
     'ytd-display-ad-renderer',
@@ -110,7 +103,6 @@
     style.textContent = `
       [id^="google_ads_"],
       [id*="google_ads_iframe_"],
-      [id*="__container__"],
       [id^="trc_wrapper"],
       [id^="utif_"],
       [id^="adnxs-1"],
@@ -281,7 +273,6 @@
   function isAdElement(el) {
     if (el.id && adIdPattern.test(el.id)) return true;
     if (el.id && /google_ads_iframe_/i.test(el.id)) return true;
-    if (el.id && /__container__$/i.test(el.id) && /google_ads_iframe_/i.test(el.id)) return true;
     const className = typeof el.className === 'string' ? el.className : '';
     if (/(^|\s)(adsbygoogle|advertisement|ad-slot|ad-container|ad-wrapper|ad-banner|google-ads)(\s|$)/i.test(className) ||
         /GoogleActiveViewInnerContainer/i.test(className)) {
